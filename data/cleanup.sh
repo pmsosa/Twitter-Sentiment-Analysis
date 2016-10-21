@@ -1,0 +1,2 @@
+rm good*
+rm bad*

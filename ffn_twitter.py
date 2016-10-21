@@ -11,14 +11,33 @@ def preprocess(tweet):
     
 # Takes a line from the file and returns the tweet split into a list of strings and its sentiment label
 def get_words_and_label(line):
-    line = line.strip().split(',')
+    line = line.strip().split(',', 3)
     label = int(line[1])
     return label, preprocess(line[3]).split(' ')
 
+# Takes a training / testing file and fills up a matrix of inputs X and outputs y and returns X, y
+def fill_matrix(file, good_probs, bad_probs, total_tweets):
+    X = np.empty([total_tweets, 140])
+    y = np.empty([total_tweets, 1])
+    for i, line in enumerate(file):
+        label, words = get_words_and_label(line)
+        y[i][0] = label
+        
+        for j in range(70):
+            if j >= len(words):
+                X[i][2*j] = 1
+                X[i][2*j+1] = 1
+            else:
+                X[i][2*j] = good_probs[words[j]]
+                X[i][2*j+1] = bad_probs[words[j]]
+    return X, y
+    
+
 #Set up neural network and training/testing files
-twitter_predictor = Feedforward_Network(140, 20, 15, 1)
-train_file = list(open("data/1000a", 'r'))
-test_file = list(open("data/1000b", 'r'))
+twitter_predictor = Feedforward_Network(140, 5, 2, 1)
+train_file = list(open("data/good1000_1", 'r'))
+test_file = list(open("data/good1000_1", 'r'))
+#print(train_file, test_file)
 
 #Set up counters for good sentiment and bad sentiment categories
 bad_count = Counter()
@@ -45,37 +64,35 @@ for line in train_file:
 total_good_words = len(good_count)
 total_bad_words = len(bad_count)
 
+
 #Convert word counts to probabilities
+good_probs = Counter()
+bad_probs = Counter()
+
 for key in good_count:
-    good_count[key] /= total_good_words
+    good_probs[key] = good_count[key] / total_good_words
 for key in bad_count:
-    bad_count[key] /= total_bad_words
+    bad_probs[key] = bad_count[key] / total_bad_words
     
 
 # Create input and output matrices
-    
-    
-    
-X = np.empty([total_tweets, 140])
-y = np.empty([total_tweets, 1])
-    
-# Fill up training matrix
-for i, line in enumerate(train_file):
-    label, words = get_words_and_label(line)
-    y[i][0] = label
-    
-    for j in range(70):
-        if j >= len(words):
-            X[i][2*j] = 1
-            X[i][2*j+1] = 1
-        else:
-            X[i][2*j] = good_count[words[j]]
-            X[i][2*j+1] = bad_count[words[j]]
-            
+X_train, y_train = fill_matrix(train_file, good_probs, bad_probs, total_tweets)
+
+print("Done preprocessing data. Training model...")
 
 # Train model
-twitter_predictor.train(X, y, 10)
+twitter_predictor.train(X_train, y_train)
 
-# Making predictions on the training dataset is bad but I'm just making sure everything is working. Will implement testing dataset soon.
-predictions= twitter_predictor.predict(X)
-print(total_good_tweets, total_bad_tweets)
+print("Testing model on training set...")
+
+# Making predictions on the training dataset is bad but just want to compare.
+predictions_train = twitter_predictor.predict(X_train)
+
+print("Preprocessing and testing model on testing set...")
+
+X_test, y_test = fill_matrix(test_file, good_probs, bad_probs, 1000)
+predictions_test = twitter_predictor.predict(X_test)
+
+print("Average error on train set: ", np.mean(np.abs(y_train - predictions_train)))
+print("Average error on test set: ", np.mean(np.abs(y_test - predictions_test)))
+print(y_test[0:5])
