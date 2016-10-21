@@ -34,21 +34,21 @@ def fill_matrix(file, good_probs, bad_probs, total_tweets):
     
 
 #Set up neural network and training/testing files
-twitter_predictor = Feedforward_Network(140, 5, 2, 1)
-train_file = list(open("data/good1000_1", 'r'))
-test_file = list(open("data/good1000_1", 'r'))
+twitter_predictor = Feedforward_Network(140, 2, 2, 1)
+train_file = list(open("data/good10000_1", 'r')) + list(open("data/bad10000_1", 'r'))
+test_file = list(open("data/good10000_2", 'r')) + list(open("data/bad10000_2", 'r'))
 #print(train_file, test_file)
 
 #Set up counters for good sentiment and bad sentiment categories
 bad_count = Counter()
 good_count = Counter()
-total_tweets = 0
+total_tweets_train = len(train_file)
+total_tweets_test = len(test_file)
 total_good_tweets = 0
 total_bad_tweets = 0
 
 #Add words to counters
 for line in train_file:
-    total_tweets += 1
     label, words = get_words_and_label(line)
     
     if label:
@@ -76,7 +76,7 @@ for key in bad_count:
     
 
 # Create input and output matrices
-X_train, y_train = fill_matrix(train_file, good_probs, bad_probs, total_tweets)
+X_train, y_train = fill_matrix(train_file, good_probs, bad_probs, total_tweets_train)
 
 print("Done preprocessing data. Training model...")
 
@@ -90,7 +90,7 @@ predictions_train = twitter_predictor.predict(X_train)
 
 print("Preprocessing and testing model on testing set...")
 
-X_test, y_test = fill_matrix(test_file, good_probs, bad_probs, 1000)
+X_test, y_test = fill_matrix(test_file, good_probs, bad_probs, total_tweets_test)
 predictions_test = twitter_predictor.predict(X_test)
 
 print("Average error on train set: ", np.mean(np.abs(y_train - predictions_train)))
