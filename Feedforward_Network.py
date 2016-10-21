@@ -1,12 +1,13 @@
 import numpy as np
 import random
 
+#Feedforward neural network with 2 hidden layers
 class Feedforward_Network:
-    def __init__(self, input_nodes, h_nodes1, h_nodes2, output_nodes):
-        self.syn0 = 2*np.random.random((input_nodes, h_nodes1)) - 1
-        self.syn1 = 2*np.random.random((h_nodes1, h_nodes2)) - 1
-        self.syn2 = 2*np.random.random((h_nodes2, output_nodes)) - 1
-        
+    def __init__(self, layer1, layer2, layer3, layer4):
+        self.syn0 = 2*np.random.random((layer1, layer2)) - 1
+        self.syn1 = 2*np.random.random((layer2, layer3)) - 1
+        self.syn2 = 2*np.random.random((layer3, layer4)) - 1
+    
     def nonlin(self, x, deriv=False):
         if deriv==True:
             return x*(1-x)
@@ -28,11 +29,6 @@ class Feedforward_Network:
         
             l3_error = y - l3
         
-            if j % 5000 == 0:
-                print("Error:" + str(np.mean(np.abs(l3_error))))
-                #print syn0
-                #print syn1
-        
             l3_delta = l3_error*self.nonlin(l3,deriv=True)
         
             l2_error = l3_delta.dot(self.syn2.T)
@@ -45,6 +41,12 @@ class Feedforward_Network:
             self.syn1 += l1.T.dot(l2_delta)
             self.syn0 += l0.T.dot(l1_delta)
             
+            if j == 0 or j % (repeat // 10) == 0:
+                print("Error:" + str(np.mean(np.abs(l3_error))))
+                #print syn0
+                #print syn1
+        
+            
     def predict(self, X):
         return self.forward_prop(X)
     
@@ -53,7 +55,7 @@ if __name__ == "__main__":
     random.seed(1)
     np.random.seed(1)
     
-    neural_net = Feedforward_Network(2, 3, 3, 1)
+    AND_predictor = Feedforward_Network(2, 30, 30, 1)
     
     X = np.array([[1, 1],
         [1, 0],
@@ -65,11 +67,11 @@ if __name__ == "__main__":
                 [0],
                 [0]])
                 
-    neural_net.train(X, y, 50000)
-    p1 = neural_net.predict(np.array([[1, 1]]))
-    p2 = neural_net.predict(np.array([[1, 0]]))
-    p3 = neural_net.predict(np.array([[0, 1]]))
-    p4 = neural_net.predict(np.array([[0, 0]]))
+    AND_predictor.train(X, y, 100000)
+    p1 = AND_predictor.predict(np.array([[1, 1]]))
+    p2 = AND_predictor.predict(np.array([[1, 0]]))
+    p3 = AND_predictor.predict(np.array([[0, 1]]))
+    p4 = AND_predictor.predict(np.array([[0, 0]]))
     
     print("1 AND 1 prediction:", p1)
     print("1 AND 0 prediction:", p2)
