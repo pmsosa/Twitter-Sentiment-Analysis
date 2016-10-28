@@ -25,8 +25,8 @@ def fill_matrix(file, good_probs, bad_probs, total_tweets):
         
         for j in range(70):
             if j >= len(words):
-                X[i][2*j] = 1
-                X[i][2*j+1] = 1
+                X[i][2*j] = 0.5
+                X[i][2*j+1] = 0.5
             else:
                 X[i][2*j] = good_probs[words[j]]
                 X[i][2*j+1] = bad_probs[words[j]]
@@ -34,9 +34,9 @@ def fill_matrix(file, good_probs, bad_probs, total_tweets):
     
 
 #Set up neural network and training/testing files
-twitter_predictor = Feedforward_Network(140, 100, 100, 1)
-train_file = list(open("data/good10000_1", 'r')) + list(open("data/bad10000_1", 'r'))
-test_file = list(open("data/good10000_2", 'r')) + list(open("data/bad10000_2", 'r'))
+twitter_predictor = Feedforward_Network(140, 20, 5, 1)
+train_file = list(open("data/good100000_1", 'r')) + list(open("data/bad100000_1", 'r'))
+test_file = list(open("data/good100000_2", 'r')) + list(open("data/bad100000_2", 'r'))
 #print(train_file, test_file)
 
 #Set up counters for good sentiment and bad sentiment categories
