@@ -1,10 +1,19 @@
 import numpy as np
 import random
 
-
-
 random.seed(1)
 np.random.seed(1)
+
+
+
+def preprocess(tweet):
+    tweet = re.sub('[!?.,\'\"\\/*-_\]\[{}()<>#$%^&+=]', '', tweet)
+    return tweet.lower()
+
+
+
+good = list(open("data/good1.csv", 'r'))
+bad = list(open("data/bad1.csv", 'r'))
 
 good = ["I like you,0", "this is awesome,0", "i like this,0", "rainbows are cool,0", "this is funny,0"]
 bad  = ["I hate you,1", "dang this place,1", "f*ck this sh*t,1", "god dang this,1", "f*ck you dude,1", "this is silly,1"]
@@ -34,6 +43,7 @@ def lookup(sentence):
 def nonlin(x,deriv=False):
     if(deriv==True):
         return x*(1-x)
+    print -x;
     return 1/(1+np.exp(-x))
 
 
