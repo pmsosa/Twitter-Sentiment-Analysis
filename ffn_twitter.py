@@ -34,9 +34,11 @@ def fill_matrix(file, good_probs, bad_probs, total_tweets):
     
 
 #Set up neural network and training/testing files
-twitter_predictor = Feedforward_Network(140, 100, 100, 1)
+twitter_predictor = Feedforward_Network(140, 100, 1, 1)
 train_file = list(open("data/good10000_1", 'r')) + list(open("data/bad10000_1", 'r'))
 test_file = list(open("data/good10000_2", 'r')) + list(open("data/bad10000_2", 'r'))
+
+
 #print(train_file, test_file)
 
 #Set up counters for good sentiment and bad sentiment categories
@@ -70,9 +72,9 @@ good_probs = Counter()
 bad_probs = Counter()
 
 for key in good_count:
-    good_probs[key] = good_count[key] / total_good_words
+    good_probs[key] = good_count[key] / float(total_good_words)
 for key in bad_count:
-    bad_probs[key] = bad_count[key] / total_bad_words
+    bad_probs[key] = bad_count[key] / float(total_bad_words)
     
 
 # Create input and output matrices
@@ -86,12 +88,12 @@ twitter_predictor.train(X_train, y_train)
 print("Testing model on training set...")
 
 # Making predictions on the training dataset is bad but just want to compare.
-predictions_train = twitter_predictor.predict(X_train)
+predictions_train = twitter_predictor.predict(X_train, repeat = 10)
 
 print("Preprocessing and testing model on testing set...")
 
 X_test, y_test = fill_matrix(test_file, good_probs, bad_probs, total_tweets_test)
-predictions_test = twitter_predictor.predict(X_test)
+predictions_test = twitter_predictor.predict(X_test, repeat = 10)
 
 print("Average error on train set: ", np.mean(np.abs(y_train - predictions_train)))
 print("Average error on test set: ", np.mean(np.abs(y_test - predictions_test)))
