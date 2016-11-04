@@ -3,6 +3,7 @@ from collections import Counter
 import re
 import numpy as np
 import random
+import string
 
 from keras.datasets import imdb
 from keras.models import Sequential
@@ -11,17 +12,34 @@ from keras.layers import Flatten
 from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence
 
+
+###PROBLEMS
+##1. PREPROCESSING "," and "." replaced by "" yields fused words (e.g hello.World = helloWorld )
+##2. GET_LABEL_WORD was returning "" empty elements
+
 np.random.seed(1)
 
 #Removes symbols from the tweet
 def preprocess(tweet):
-    return re.sub('[!?.,\'\"\\/*-_\]\[{}()<>#$%^&+=]', '', tweet)
+    exclude = set(string.punctuation)
+    text = tweet.lower()
+    text = ''.join(ch for ch in text if ch not in exclude)
+    return text
+    #return re.sub('[!?.,\'\"\\/*-_\]\[{}()<>#$%^&+=]'," ", tweet)
     
 # Takes a line from the file and returns the tweet split into a list of strings and its sentiment label
 def get_words_and_label(line):
+
     line = line.strip().split(',', 3)
     label = int(line[1])
-    return label, preprocess(line[3]).split(' ')
+    #print line
+    tword = preprocess(line[3]).split()
+    word = []
+    for w in tword:
+        if (w!= ""):
+            word += [w]
+    #print word
+    return label, word
 
 # Takes a training / testing file and fills up a matrix of inputs X and outputs y and returns X, y
 def fill_matrix(file, good_probs, bad_probs, total_tweets):
@@ -69,7 +87,12 @@ for line in train_file:
         count_tracker = bad_count
         
     for w in words:
-        count_tracker[w] += 1
+        #print words
+        if w != "":
+            count_tracker[w] += 1
+        else:
+            print words
+            os.xes #just some random bs to crash
 
 total_good_words = len(good_count)
 total_bad_words = len(bad_count)
@@ -83,6 +106,31 @@ for key in good_count:
     good_probs[key] = good_count[key] / float(total_good_words)
 for key in bad_count:
     bad_probs[key] = bad_count[key] / float(total_bad_words)
+    
+
+###WORD EMBEDDING EXPERIMENT###
+dictionary = Counter()
+
+print "hello"
+#Rate words depending on how popular they are
+for line in train_file:
+    label, words = get_words_and_label(line)
+    
+    
+    for w in words:
+        dictionary[w] += 1
+
+
+print len(dictionary)
+dict5000 = dictionary.most_common(5000)
+
+model = Sequential()
+model.add(Embedding(5000,32,input_length=500)
+model.compile("rmsprop","mse")
+output_array = model.predict(dict5000)
+print output_array
+
+###############################
     
 
 # Create input and output matrices
