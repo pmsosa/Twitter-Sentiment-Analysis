@@ -47,6 +47,19 @@ print len(y_train),y_train[0]
 print len(y_test),y_test[0]
 
 #print len(X_train),len(X_train[0])
+model = Sequential()
+model.add(Embedding(top_words, 32, input_length=max_words))
+model.add(Flatten())
+model.compile("rmsprop","mse")
+X_test_emb = model.predict(X_test)
+X_train_emb = model.predict(X_train)
+
+with open("emb_train.ser","wb") as f:
+    pickle.dump((X_train_emb,y_train),f)
+
+with open("emb_test.ser","wb") as f:
+    pickle.dump((X_test_emb,y_test),f)
+
 
 # create the model
 model = Sequential()
@@ -63,13 +76,6 @@ print(model.summary())
 
 #Batch Size: How many you are training at the same time.
 #
-#model = Sequential()
-#model.add(Embedding(top_words, 32, input_length=max_words))
-#model.add(Flatten())
-#model.compile("rmsprop","mse")
-#output_array = model.predict(X_train)
-#print output_array
-
 model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=1, batch_size=100, verbose=1)
 # Final evaluation of the model
 scores = model.evaluate(X_test, y_test, verbose=0)
