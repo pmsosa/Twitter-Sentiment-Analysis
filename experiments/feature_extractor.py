@@ -14,6 +14,8 @@
 import csv
 import random
 import pickle
+from collections import Counter
+import time
 
 import numpy
 from keras.datasets import imdb
@@ -23,10 +25,59 @@ from keras.layers import Flatten
 from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence
 
-random.seed(0)
+from stop_words import get_stop_words
+stop_words = get_stop_words("en")
+
+
+random.seed(time.time())
+
+#BAD = 0 | GODD = 1
+
+def create_vocab():
+
+    good_dict = Counter()
+    bad_dict = Counter()
+
+    filename = "Sentiment Analysis Dataset.csv"
+
+    seen = 0
+
+    with open(filename, 'r') as f:
+        reader = csv.reader(f)
+        seen += 1
+        
+        for line in reader:
+            seen += 1
+            sentiment = line[1]
+            tweet = line[3]
+            stweet = tweet.split()
+            #print tweet.split()
+            for word in stweet:
+                if word != "":
+                    if (sentiment == "0"):
+                        bad_dict[word] += 1
+                    else:
+                        good_dict[word] += 1
+
+            if (seen %10000 == 0): print seen,"---",sentiment,tweet
+
+    with open("goddvocab.ser","wb") as f:
+        pickle.dump(good_dict,f)
+
+    with open("badvocab.ser","wb") as f:
+        pickle.dump(bad_dict,f)
+
+    print good_dict.most_common(10)
+    print bad_dict.most_common(10)
+
+
+
 
 def extract_features():
-    feat_num     = 10
+    global stop_words
+
+
+    feat_num     = 13
 
     chwd         = 0
     questions    = 1
@@ -38,7 +89,17 @@ def extract_features():
     ellipsis     = 7
     hashtags     = 8
     capitals     = 9
-    #length       = 10
+    length       = 10
+    mention      = 11
+    netprob      = 12
+    #test         = 11
+
+    with open("goddvocab.ser","rb") as f:
+        good_dict = pickle.load(f)
+
+    with open("badvocab.ser","rb") as f:
+        bad_dict = pickle.load(f)
+
 
     pronouns = ["i","me", "we", "us", "you", "he", "him", "she", "her", "it", "they", "them"]
     good_emoticons = [":)", ":D", "XD",":P", ":p", ";)",";D",";P"]
@@ -60,13 +121,31 @@ def extract_features():
 
             features = [0] * feat_num
 
+            #11. Test - Feed the Sentiment
+            #features[test] = sentiment
+
             #0. Char/Words
             features[chwd] = float(len(tweet))/len(stweet)
 
             #10. Length
-            #features[length] = len(stweet)
+            features[length] = len(stweet)
+
+            #12. Net Probability
+            g = 0
+            b = 0
+            for word in stweet:
+                #Removing stop words (for better percentage)
+                #if word.lower() not in stop_words:
+                #Don't include this. it did worse.
+                g += good_dict[word]
+                b += bad_dict[word]
+
+
+            features[netprob] = float(g)/len(good_dict) - float(b)/len(bad_dict)
+
 
             for word in stweet:
+
 
                 #1. Question Marks
                 if "?" in word:
@@ -93,6 +172,8 @@ def extract_features():
                 #8. Hashtags
                 if word[0] == "#":
                     features[hashtags] += 1
+                elif word[0] == "@":
+                    features[mention] += 1
 
                 #4. Good Emoticon
                 if word in good_emoticons:
@@ -121,7 +202,6 @@ def extract_features():
             if (seen %10000 == 0): print seen,"---",towrite
 
     output.close()
-
 
 
 def create_batches(size=2000,split=0.5):
@@ -176,7 +256,7 @@ def create_batches(size=2000,split=0.5):
                     y_test += [int(sentiment)]
 
 
-            print (train_bad,train_good,test_bad,test_good,size*split)
+            #print (train_bad,train_good,test_bad,test_good,size*split)
 
 
     print len(X_train), len(y_train)
@@ -191,14 +271,13 @@ def create_batches(size=2000,split=0.5):
     return (X_train,y_train,X_test,y_test)
 
 
-
 def keras_nn(X_train,y_train,X_test,y_test):
 
     print numpy.asarray(X_train)[0:5]
     # create the model
     model = Sequential()
     #print X_train
-    model.add(Dense(100, activation='relu',input_dim=10))
+    model.add(Dense(100, activation='relu',input_dim=len(X_train[0])))
     model.add(Dense(1, activation='sigmoid'))
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     print(model.summary())
@@ -219,10 +298,26 @@ def keras_nn(X_train,y_train,X_test,y_test):
 
 ###MAIN
 
-extract_features();
+
+
+#PART 1. CREATE THE GOOD AND BAD VOCABULARY DICTIONARIES (ONLY NEED TO DO IT ONCE)
+print "\n\n>>Creating Vocab...\n\n"
+#create_vocab()
+
+#PART 2. EXTRACT FEATURES: TURN TWEET DATAPOINTS INTO A VECTOR OF FEATURES
+print "\n\n>>Extracting Features...\n\n"
+#extract_features();
+
+#PART 3. CREATE BATCHES: SIMPLY GENERATE RANDOM BATCHES TO TEST WITH
+print "\n\n>>Creating Batches...\n\n"
 (X_train,y_train,X_test,y_test) = create_batches(20000,0.5)
 
+#PART 4. ACTUALLY RUN OUR TEST ON A NEURAL NETWORK
+print "\n\n>>Running Through Keras NN...\n\n"
 keras_nn(X_train,y_train,X_test,y_test)
+
+
+
 
 #65-61
 #61 without length
