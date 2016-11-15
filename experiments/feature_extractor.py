@@ -29,7 +29,7 @@ from stop_words import get_stop_words
 stop_words = get_stop_words("en")
 
 
-random.seed(time.time())
+random.seed(1)#time.time())
 
 #BAD = 0 | GODD = 1
 
@@ -219,13 +219,17 @@ def create_batches(size=2000,split=0.5):
     with open("featured_dataset.csv", 'r') as f:
         reader = csv.reader(f)
 
+        tr_good = False
+        ts_good = False
 
+        tr_bad = False
+        ts_bad = False
 
         for line in reader:
             sentiment = line[0]
             tweet = line[1:]
 
-            if (test_good == test_bad == train_good == train_bad == size*split): break;
+            if (tr_good == ts_good == tr_bad == ts_bad == True): break;
 
             #Randomly drop some
             if (random.randint(0,1)):
@@ -233,10 +237,14 @@ def create_batches(size=2000,split=0.5):
                 #Randomly drop into Train or Test set
                 if (random.randint(0,1)):
                     if (int(sentiment) == 1): 
-                        if (train_good >= size*split): continue;
+                        if (train_good >= size*split[0][1]): 
+                            tr_good = True
+                            continue;
                         train_good += 1
                     else: 
-                        if (train_bad >= size*split): continue;
+                        if (train_bad >= size*split[0][0]): 
+                            tr_bad = True
+                            continue;
                         train_bad += 1
 
                     X_train += [[float(i) for i in tweet]]
@@ -246,18 +254,21 @@ def create_batches(size=2000,split=0.5):
                 else:
 
                     if (int(sentiment) == 1): 
-                        if (test_good >= size*split): continue;
+                        if (test_good >= size*split[1][1]): 
+                            ts_good = True
+                            continue;
                         test_good += 1
                     else: 
-                        if (test_bad >= size*split): continue;
+                        if (test_bad >= size*split[1][0]): 
+                            ts_bad = True
+                            continue;
                         test_bad += 1
 
                     X_test += [[float(i) for i in tweet]]
                     y_test += [int(sentiment)]
 
 
-            #print (train_bad,train_good,test_bad,test_good,size*split)
-
+    print (train_bad,train_good,test_bad,test_good,size)
 
     print len(X_train), len(y_train)
     print len(X_test), len(y_test)
@@ -277,7 +288,7 @@ def keras_nn(X_train,y_train,X_test,y_test):
     # create the model
     model = Sequential()
     #print X_train
-    model.add(Dense(100, activation='relu',input_dim=len(X_train[0])))
+    model.add(Dense(250, activation='relu',input_dim=len(X_train[0])))
     model.add(Dense(1, activation='sigmoid'))
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     print(model.summary())
@@ -287,13 +298,13 @@ def keras_nn(X_train,y_train,X_test,y_test):
 
     #Batch Size: How many you are training at the same time.
     #
-    model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=1, batch_size=256, verbose=1)
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=1, batch_size=1, verbose=1)
     # Final evaluation of the model
     scores = model.evaluate(X_test, y_test, verbose=0)
-    print("Accuracy: %.2f%%" % (scores[1]*100))
+    print("Accuracy TEST: %.2f%%" % (scores[1]*100))
 
     scores = model.evaluate(X_train, y_train, verbose=0)
-    print("Accuracy: %.2f%%" % (scores[1]*100))
+    print("Accuracy TRAIN: %.2f%%" % (scores[1]*100))
 
 
 ###MAIN
@@ -310,7 +321,9 @@ print "\n\n>>Extracting Features...\n\n"
 
 #PART 3. CREATE BATCHES: SIMPLY GENERATE RANDOM BATCHES TO TEST WITH
 print "\n\n>>Creating Batches...\n\n"
-(X_train,y_train,X_test,y_test) = create_batches(20000,0.5)
+                                                       #  Train       Test
+                                                       #(Good,Bad),(Good,Bad)
+(X_train,y_train,X_test,y_test) = create_batches(20000,((0.5,0.5),(0.5,0.5)))
 
 #PART 4. ACTUALLY RUN OUR TEST ON A NEURAL NETWORK
 print "\n\n>>Running Through Keras NN...\n\n"
