@@ -1,0 +1,13 @@
+# Scale font and line width (dpi) by changing the size! It will always display stretched.
+set terminal svg size 400,300 enhanced fname 'arial'  fsize 10 butt solid
+set output 'out.svg'
+
+# Key means label...
+set key inside bottom right
+set xlabel 'Batch Size'
+set ylabel 'Accuracy'
+set yrange [0:1]
+set arrow from 0,0.5 to 2500,0.5 nohead
+set title 'Accuracy vs. Batch Size'
+plot  "data.txt" using 1:2 title 'Features' with lines, \
+"data.txt" using 1:3 title 'Word Embeddings' with lines

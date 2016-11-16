@@ -298,11 +298,7 @@ def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=250,e
     if (verbose == 1):
         print(model.summary())
 
-
-    # Fit the model
-
-    #Batch Size: How many you are training at the same time.
-    #
+    #Fit
     model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=epoch, batch_size=batchsize, verbose=verbose)
     # Final evaluation of the model
     score_test = model.evaluate(X_test, y_test, verbose=verbose)
@@ -403,10 +399,15 @@ if __name__ == "__main__":
     #keras_nn(X_train,y_train,X_test,y_test)
 
     #Experiments:
+    print "Starting experiments..."
+    print "1. Batch Sizes"
     exp_batchsize(1,2201,50)
 
-    exp_numhidden(1,10,1)
+    print "1. Number of Hidden Layers"
+    exp_numhidden(1,20,1)
 
-    exp_sizehidden(100,1000,50)
+    print "1. Size of Hidden Layer"
+    exp_sizehidden(1,2000,100)
 
-    exp_epoch(1,10,1)
+    print "1. Number of Epochs"
+    exp_epoch(10,20,1)
