@@ -1,4 +1,4 @@
-Bizzare Experiments with ML that will hopefully develop into a fully formed project for the CS273: Database and Knowledge Base Class @ UCSB
+Two guys with no ML knowledge set out to create a Neural Network to do Twitter sentiment analysis. :D
 
 How to use:
 
