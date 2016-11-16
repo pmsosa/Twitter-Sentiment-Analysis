@@ -29,7 +29,7 @@ from stop_words import get_stop_words
 stop_words = get_stop_words("en")
 
 
-random.seed(1)#time.time())
+random.seed(1) #time.time())
 
 #BAD = 0 | GODD = 1
 
@@ -71,28 +71,28 @@ def create_vocab():
     print bad_dict.most_common(10)
 
 
-
-
 def extract_features():
     global stop_words
 
 
-    feat_num     = 13
+    feat_num     = 8
+
+    #Only choosing the best features (selected with WEKA)
 
     chwd         = 0
-    questions    = 1
-    exclamations = 2
-    pronoun      = 3
-    smile        = 4
-    sad          = 5
-    url          = 6
-    ellipsis     = 7
-    hashtags     = 8
-    capitals     = 9
-    length       = 10
-    mention      = 11
-    netprob      = 12
-    #test         = 11
+    exclamations = 1
+    smile        = 2
+    sad          = 3
+    url          = 4
+    ellipsis     = 5
+    mention      = 6
+    netprob      = 7
+    #questions    = 8
+    #pronoun      = 9
+    #hashtags     = 10
+    #capitals     = 11
+    #length       = 12
+    #test         = 13
 
     with open("goddvocab.ser","rb") as f:
         good_dict = pickle.load(f)
@@ -128,7 +128,7 @@ def extract_features():
             features[chwd] = float(len(tweet))/len(stweet)
 
             #10. Length
-            features[length] = len(stweet)
+            #features[length] = len(stweet)
 
             #12. Net Probability
             g = 0
@@ -148,8 +148,8 @@ def extract_features():
 
 
                 #1. Question Marks
-                if "?" in word:
-                    features[questions] += 1
+                # if "?" in word:
+                #     features[questions] += 1
 
                 #2. Exclamation Marks
                 if "!" in word:
@@ -170,9 +170,9 @@ def extract_features():
                     features[url] += 1
 
                 #8. Hashtags
-                if word[0] == "#":
-                    features[hashtags] += 1
-                elif word[0] == "@":
+                # if word[0] == "#":
+                #     features[hashtags] += 1
+                if word[0] == "@":
                     features[mention] += 1
 
                 #4. Good Emoticon
@@ -182,15 +182,15 @@ def extract_features():
                 elif word in bad_emoticons:
                     features[sad] += 1
 
-                else:
-                    #3. Pronouns
-                    for p in pronouns:
-                        if p == word.lower():
-                            features[pronoun] += 1
-                            break;
+                # #3. Pronouns
+                #else:
+                    # for p in pronouns:
+                    #     if p == word.lower():
+                    #         features[pronoun] += 1
+                    #         break;
                 #9. Capital Letters
-                for ch in word:
-                    features[capitals] += int(ch.isupper())
+                # for ch in word:
+                #     features[capitals] += int(ch.isupper())
 
             #Save 
             towrite = sentiment
@@ -204,7 +204,7 @@ def extract_features():
     output.close()
 
 
-def create_batches(size=2000,split=0.5):
+def create_batches(train_size=2000,test_size=2000,split=((0.5,0.5),(0.5,0.5))):
 
     X_train     = []
     y_train     = []
@@ -218,6 +218,7 @@ def create_batches(size=2000,split=0.5):
 
     with open("featured_dataset.csv", 'r') as f:
         reader = csv.reader(f)
+        next(reader) #skip first line (labels)
 
         tr_good = False
         ts_good = False
@@ -226,6 +227,7 @@ def create_batches(size=2000,split=0.5):
         ts_bad = False
 
         for line in reader:
+
             sentiment = line[0]
             tweet = line[1:]
 
@@ -237,12 +239,12 @@ def create_batches(size=2000,split=0.5):
                 #Randomly drop into Train or Test set
                 if (random.randint(0,1)):
                     if (int(sentiment) == 1): 
-                        if (train_good >= size*split[0][1]): 
+                        if (train_good >= train_size*split[0][1]): 
                             tr_good = True
                             continue;
                         train_good += 1
                     else: 
-                        if (train_bad >= size*split[0][0]): 
+                        if (train_bad >= train_size*split[0][0]): 
                             tr_bad = True
                             continue;
                         train_bad += 1
@@ -254,12 +256,12 @@ def create_batches(size=2000,split=0.5):
                 else:
 
                     if (int(sentiment) == 1): 
-                        if (test_good >= size*split[1][1]): 
+                        if (test_good >= test_size*split[1][1]): 
                             ts_good = True
                             continue;
                         test_good += 1
                     else: 
-                        if (test_bad >= size*split[1][0]): 
+                        if (test_bad >= test_size*split[1][0]): 
                             ts_bad = True
                             continue;
                         test_bad += 1
@@ -268,10 +270,10 @@ def create_batches(size=2000,split=0.5):
                     y_test += [int(sentiment)]
 
 
-    print (train_bad,train_good,test_bad,test_good,size)
+    #print (train_bad,train_good,test_bad,test_good,train_size,test_size)
 
-    print len(X_train), len(y_train)
-    print len(X_test), len(y_test)
+    #print len(X_train), len(y_train)
+    #print len(X_test), len(y_test)
     #Serialize
     with open("train.ser","wb") as f:
         pickle.dump((X_train,y_train),f)
@@ -282,55 +284,129 @@ def create_batches(size=2000,split=0.5):
     return (X_train,y_train,X_test,y_test)
 
 
-def keras_nn(X_train,y_train,X_test,y_test):
+def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=250,epoch=1,hidden=1):
 
-    print numpy.asarray(X_train)[0:5]
+    #print numpy.asarray(X_train)[0:5]
     # create the model
     model = Sequential()
     #print X_train
-    model.add(Dense(250, activation='relu',input_dim=len(X_train[0])))
+    model.add(Dense(layersize, activation='relu',input_dim=len(X_train[0])))
+    for h in range(1,hidden):
+        model.add(Dense(layersize, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-    print(model.summary())
+    if (verbose == 1):
+        print(model.summary())
 
 
     # Fit the model
 
     #Batch Size: How many you are training at the same time.
     #
-    model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=1, batch_size=1, verbose=1)
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=epoch, batch_size=batchsize, verbose=verbose)
     # Final evaluation of the model
-    scores = model.evaluate(X_test, y_test, verbose=0)
-    print("Accuracy TEST: %.2f%%" % (scores[1]*100))
+    score_test = model.evaluate(X_test, y_test, verbose=verbose)
 
-    scores = model.evaluate(X_train, y_train, verbose=0)
-    print("Accuracy TRAIN: %.2f%%" % (scores[1]*100))
+    score_train = model.evaluate(X_train, y_train, verbose=verbose)
 
+    if (verbose):
+        print("Accuracy TEST: %.2f%%" % (score_test[1]*100))
+        print("Accuracy TRAIN: %.2f%%" % (score_train[1]*100))
 
-###MAIN
-
-
-
-#PART 1. CREATE THE GOOD AND BAD VOCABULARY DICTIONARIES (ONLY NEED TO DO IT ONCE)
-print "\n\n>>Creating Vocab...\n\n"
-#create_vocab()
-
-#PART 2. EXTRACT FEATURES: TURN TWEET DATAPOINTS INTO A VECTOR OF FEATURES
-print "\n\n>>Extracting Features...\n\n"
-#extract_features();
-
-#PART 3. CREATE BATCHES: SIMPLY GENERATE RANDOM BATCHES TO TEST WITH
-print "\n\n>>Creating Batches...\n\n"
-                                                       #  Train       Test
-                                                       #(Good,Bad),(Good,Bad)
-(X_train,y_train,X_test,y_test) = create_batches(20000,((0.5,0.5),(0.5,0.5)))
-
-#PART 4. ACTUALLY RUN OUR TEST ON A NEURAL NETWORK
-print "\n\n>>Running Through Keras NN...\n\n"
-keras_nn(X_train,y_train,X_test,y_test)
+    return score_test[1]
 
 
+###Experiments for Charts
+# Batch Size
+def exp_batchsize(low,high,i):
+    print "Batchsize Experiment..."
+    batchsize = low
+    output = open("batchsize_exp","w+");
+
+    (X_train,y_train,X_test,y_test) = create_batches(5000,2000,((0.5,0.5),(0.5,0.5)))
+    while (batchsize <= high):
+
+        result = keras_nn(X_train,y_train,X_test,y_test,batchsize=batchsize)
+        
+        output.write(str(batchsize)+" "+str(result)+"\n")
+        print batchsize, result;
+        batchsize += i
+    
+    output.close()
+
+# Num of Hidden Layers
+def exp_numhidden(low,high,i):
+    print "Number of Hidden Layers Experiment..."
+    hidden = low
+    output = open("numhidden_exp","w+");
+
+    (X_train,y_train,X_test,y_test) = create_batches(5000,2000,((0.5,0.5),(0.5,0.5)))
+    while (hidden <= high):
+        result = keras_nn(X_train,y_train,X_test,y_test,hidden=hidden)
+        output.write(str(hidden)+" "+str(result)+"\n")
+        print hidden, result;
+        hidden += i
+    output.close()
 
 
-#65-61
-#61 without length
+# Size of Hidden Layer
+def exp_sizehidden(low,high,i):
+    print "Size of Hidden Layer Experiment..."
+    layersize = low
+    output = open("sizehidden_exp","w+");
+
+    (X_train,y_train,X_test,y_test) = create_batches(5000,2000,((0.5,0.5),(0.5,0.5)))
+    while (layersize <= high):
+        result = keras_nn(X_train,y_train,X_test,y_test,layersize=layersize)
+        output.write(str(layersize)+" "+str(result)+"\n")
+        print layersize, result;
+        layersize += i
+    output.close()
+
+# Epoch
+def exp_epoch(low,high,i):
+    print "Epoch Experiment..."
+    epoch = low
+    output = open("epoch_exp","w+");
+
+    (X_train,y_train,X_test,y_test) = create_batches(5000,2000,((0.5,0.5),(0.5,0.5)))
+    while (epoch <= high):
+        result = keras_nn(X_train,y_train,X_test,y_test,epoch=epoch)
+        output.write(str(epoch)+" "+str(result)+"\n")
+        print epoch, result;
+        epoch += i
+    output.close()
+
+
+
+
+
+if __name__ == "__main__":
+    #PART 1. CREATE THE GOOD AND BAD VOCABULARY DICTIONARIES (ONLY NEED TO DO IT ONCE)
+    #print "\n\n>>Creating Vocab...\n\n"
+    #create_vocab()
+
+    #PART 2. EXTRACT FEATURES: TURN TWEET DATAPOINTS INTO A VECTOR OF FEATURES
+    #print "\n\n>>Extracting Features...\n\n"
+    #extract_features();
+
+    #PART 3. CREATE BATCHES: SIMPLY GENERATE RANDOM BATCHES TO TEST WITH
+    #print "\n\n>>Creating Batches...\n\n"
+
+
+                                                           #  Train       Test
+                                                           #(Good,Bad),(Good,Bad)
+    #(X_train,y_train,X_test,y_test) = create_batches(2000,500,((0.5,0.5),(0.5,0.5)))
+
+    #PART 4. ACTUALLY RUN OUR TEST ON A NEURAL NETWORK
+    #print "\n\n>>Running Through Keras NN...\n\n"
+    #keras_nn(X_train,y_train,X_test,y_test)
+
+    #Experiments:
+    exp_batchsize(1,2201,50)
+
+    exp_numhidden(1,10,1)
+
+    exp_sizehidden(100,1000,50)
+
+    exp_epoch(1,10,1)
