@@ -3,3 +3,8 @@ data/bad*
 data/full_data
 .~*
 ~*
+*.ser
+*.csv
+*.pyc
+*.good
+*.bad
