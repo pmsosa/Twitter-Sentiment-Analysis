@@ -25,14 +25,18 @@ from keras.layers import Flatten
 from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence
 
+from keras.layers import LSTM, SimpleRNN, GRU
+
 from stop_words import get_stop_words
 stop_words = get_stop_words("en")
 
 
 random.seed(1) #time.time())
 
-#BAD = 0 | GODD = 1
+#SETUP##########################################
 
+#Create set of good/bad dictionaries (needed for the extract_features method)
+#Can be run once, as it will save the serialized version of the good/bad dict.
 def create_vocab():
 
     good_dict = Counter()
@@ -70,7 +74,8 @@ def create_vocab():
     print good_dict.most_common(10)
     print bad_dict.most_common(10)
 
-
+#Extract Features from the Dataset and create a new dataset with the given features.
+#Can be run once as it will save the parsed dataset as a csv file.
 def extract_features():
     global stop_words
 
@@ -203,7 +208,7 @@ def extract_features():
 
     output.close()
 
-
+#Create Batches from the Dataset
 def create_batches(train_size=2000,test_size=2000,split=((0.5,0.5),(0.5,0.5))):
 
     X_train     = []
@@ -283,7 +288,7 @@ def create_batches(train_size=2000,test_size=2000,split=((0.5,0.5),(0.5,0.5))):
 
     return (X_train,y_train,X_test,y_test)
 
-
+#Create, Train and Test the Nerual Network
 def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=250,epoch=1,hidden=1):
 
     #print numpy.asarray(X_train)[0:5]
@@ -311,8 +316,8 @@ def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=250,e
 
     return score_test[1]
 
+#EXPERIMENTS####################################
 
-###Experiments for Charts
 # Batch Size
 def exp_batchsize(low,high,i):
     print "Batchsize Experiment..."
@@ -373,6 +378,21 @@ def exp_epoch(low,high,i):
         epoch += i
     output.close()
 
+#Best Run
+def best_run(reps,epoch,layersize,numhidden,batchsize,verbose):
+    print "Running with Best Parameters"
+    output = open("best_features","w+")
+    total = 0
+    for i in range(0,reps):
+        (X_train,y_train,X_test,y_test) = create_batches(5000,2000,((0.5,0.5),(0.5,0.5)))
+        result = keras_nn(X_train,y_train,X_test,y_test,epoch=epoch,layersize=layersize,hidden=numhidden,batchsize=batchsize,verbose=verbose)
+        output.write(str(result)+"\n")
+        total += result
+        print result," ",total/float(i+1)
+
+    print "Average:",total/float(reps)
+    output.write(str(total/float(reps))+"\n")
+    output.close()
 
 
 
@@ -401,13 +421,16 @@ if __name__ == "__main__":
     #Experiments:
     print "Starting experiments..."
     print "1. Batch Sizes"
-    exp_batchsize(1,2201,50)
+    #exp_batchsize(1,2201,50)
 
-    print "1. Number of Hidden Layers"
-    exp_numhidden(1,20,1)
+    print "2. Number of Hidden Layers"
+    #exp_numhidden(1,20,1)
 
-    print "1. Size of Hidden Layer"
-    exp_sizehidden(1,2000,100)
+    print "3. Size of Hidden Layer"
+    #exp_sizehidden(1,2001,100)
 
-    print "1. Number of Epochs"
-    exp_epoch(10,20,1)
+    print "4. Number of Epochs"
+    #exp_epoch(1,20,1)
+
+    print "Best Run"
+    #best_run(reps=10,epoch=3,layersize=250,numhidden=2,batchsize=1,verbose=0)
