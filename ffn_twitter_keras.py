@@ -125,7 +125,7 @@ print len(dictionary)
 dict5000 = dictionary.most_common(5000)
 
 model = Sequential()
-model.add(Embedding(5000,32,input_length=500)
+model.add(Embedding(5000,32,input_length=500))
 model.compile("rmsprop","mse")
 output_array = model.predict(dict5000)
 print output_array
