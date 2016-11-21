@@ -53,9 +53,9 @@ def fill_matrix(file, good_probs, bad_probs, total_tweets):
     
 
 #Set up neural network and training/testing files
-twitter_predictor = Feedforward_Network(140, 20, 2)
+twitter_predictor = Feedforward_Network(140, 25, 2)
 train_file = list(open("data/good10000_1", 'r')) + list(open("data/bad10000_1", 'r'))
-test_file = list(open("data/good10000_1", 'r')) + list(open("data/bad10000_1", 'r'))
+test_file = list(open("data/good10000_2", 'r')) + list(open("data/bad10000_2", 'r'))
 
 
 #print(train_file, test_file)
@@ -109,7 +109,7 @@ print(y_train)
 print("Done preprocessing data. Training model...")
 
 # Train model
-twitter_predictor.train(X_train, y_train, epochs = 200, batch_size = 500)
+twitter_predictor.train(X_train, y_train, epochs = 100, batch_size = 50, rate = 0.05)
 
 print("Testing model on training set...")
 

@@ -4,8 +4,12 @@ import random
 #Feedforward neural network with 2 hidden layers
 class Feedforward_Network:
     def __init__(self, layer1, layer2, layer3):
-        self.syn0 = 2*np.random.random((layer1, layer2)) - 1
-        self.syn1 = 2*np.random.random((layer2, layer3)) - 1
+
+        
+        self.syn0 = np.random.random((layer1, layer2))
+        self.syn1 = np.random.random((layer2, layer3))
+        self.biases1 = np.random.random((1, layer2))
+        self.biases2 = np.random.random((1, layer3))
     
     def nonlin(self, x, deriv=False):
         if deriv==True:
@@ -15,11 +19,11 @@ class Feedforward_Network:
         
     def forward_prop(self, X):
             l0 = X
-            l1 = self.nonlin(np.dot(l0, self.syn0))
-            l2 = self.nonlin(np.dot(l1, self.syn1))
+            l1 = self.nonlin(np.dot(l0, self.syn0) + self.biases1)
+            l2 = self.nonlin(np.dot(l1, self.syn1) + self.biases2)
             return l2
         
-    def train(self, X, y, epochs = 1, batch_size = 1):
+    def train(self, X, y, epochs = 1, batch_size = 1, rate = 1):
         
         X = np.asarray(X)
         y = np.asarray(y)
@@ -30,25 +34,28 @@ class Feedforward_Network:
             together = zip(X_copy, y_copy)
             random.shuffle(together)
             X_copy, y_copy = zip(*together)
-            X_copy = np.array_split(X_copy, batch_size)
-            y_copy = np.array_split(y_copy, batch_size)
+            batch_count = len(y_copy) // batch_size
+            X_copy = np.array_split(X_copy, batch_count)
+            y_copy = np.array_split(y_copy, batch_count)
             
-            for j in range(batch_size):
+            for j in range(batch_count):
                 l0 = X_copy[j]
-                l1 = self.nonlin(np.dot(l0, self.syn0))
-                l2 = self.nonlin(np.dot(l1, self.syn1))
+                l1 = self.nonlin(np.dot(l0, self.syn0) + self.biases1)
+                l2 = self.nonlin(np.dot(l1, self.syn1) + self.biases2)
     
                 l2_error = y_copy[j] - l2
-                l2_delta = l2_error*self.nonlin(l2,deriv=True)
+                l2_delta = l2_error * self.nonlin(l2, deriv=True)
             
                 l1_error = l2_delta.dot(self.syn1.T)
-                l1_delta = l1_error* self.nonlin(l1,deriv=True)
+                l1_delta = l1_error * self.nonlin(l1, deriv=True)
             
+                self.biases1 += np.sum(l1_delta, axis = 0) * rate
+                self.biases2 += np.sum(l2_delta, axis = 0) * rate
                 
-                self.syn1 += l1.T.dot(l2_delta)
-                self.syn0 += l0.T.dot(l1_delta)
+                self.syn1 += l1.T.dot(l2_delta) * rate
+                self.syn0 += l0.T.dot(l1_delta) * rate
                 
-            if batch_size // 10 != 0 and (i == 0 or i % (batch_size // 10) == 0):
+            if epochs % 10 == 0:
                 print("Error:" + str(np.mean(np.abs(l2_error))))
                 #print syn0
                 #print syn1
@@ -74,7 +81,7 @@ if __name__ == "__main__":
                 [0],
                 [0]])
                 
-    AND_predictor.train(X, y, epochs = 10000, batch_size = 1)
+    AND_predictor.train(X, y, epochs = 10000, batch_size = 4)
     
     p1 = AND_predictor.predict(np.array([[1, 1]]))
     p2 = AND_predictor.predict(np.array([[1, 0]]))
