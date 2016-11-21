@@ -319,7 +319,7 @@ def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=250,e
     return score_test[1]
     
     #Create, Train and Test the Nerual Network
-def ff_nn(X_train,y_train,X_test,y_test,batchsize=1,layersize=250,epoch=1):
+def ff_nn(X_train,y_train,X_test,y_test, batchsize = 50, layersize=25, epoch = 100, rate = 0.1):
 
     
     model = Feedforward_Network(len(X_train[0]), layersize, 2)
@@ -327,7 +327,7 @@ def ff_nn(X_train,y_train,X_test,y_test,batchsize=1,layersize=250,epoch=1):
     #Fit
     y_train = [[1, 0] if i == 1 else [0, 1] for i in y_train]
     y_test = [[1, 0] if i == 1 else [0, 1] for i in y_test]
-    model.train(X_train, y_train, epochs=epoch, batch_size=batchsize)
+    model.train(X_train, y_train, epochs=epoch, batch_size=batchsize, rate = rate)
 
     print("Testing model...")
     predictions_train = model.predict(X_train)
@@ -431,12 +431,12 @@ def best_run(reps,epoch,layersize,numhidden,batchsize,verbose):
 
 if __name__ == "__main__":
     #PART 1. CREATE THE GOOD AND BAD VOCABULARY DICTIONARIES (ONLY NEED TO DO IT ONCE)
-    print "\n\n>>Creating Vocab...\n\n"
-    create_vocab()
+    #print "\n\n>>Creating Vocab...\n\n"
+    #create_vocab()
 
     #PART 2. EXTRACT FEATURES: TURN TWEET DATAPOINTS INTO A VECTOR OF FEATURES
-    print "\n\n>>Extracting Features...\n\n"
-    extract_features();
+    #print "\n\n>>Extracting Features...\n\n"
+    #extract_features();
 
     #PART 3. CREATE BATCHES: SIMPLY GENERATE RANDOM BATCHES TO TEST WITH
     print "\n\n>>Creating Batches...\n\n"
@@ -451,7 +451,7 @@ if __name__ == "__main__":
     #keras_nn(X_train,y_train,X_test,y_test)
     
     print "\n\n>>Running through our NN...\n\n"
-    ff_nn(X_train,y_train,X_test,y_test, batchsize = 200, layersize=25, epoch = 100)
+    ff_nn(X_train,y_train,X_test,y_test, batchsize = 50, layersize=20, epoch = 100, rate = 0.1)
 
     #Experiments:
     #print "Starting experiments..."
