@@ -17,6 +17,8 @@ import pickle
 from collections import Counter
 import time
 
+from Feedforward_Network import Feedforward_Network
+
 import numpy
 from keras.datasets import imdb
 from keras.models import Sequential
@@ -315,6 +317,36 @@ def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=250,e
         print("Accuracy TRAIN: %.2f%%" % (score_train[1]*100))
 
     return score_test[1]
+    
+    #Create, Train and Test the Nerual Network
+def ff_nn(X_train,y_train,X_test,y_test, batchsize = 50, layersize=25, epoch = 100, rate = 0.1):
+
+    
+    model = Feedforward_Network(len(X_train[0]), layersize, 2)
+
+    #Fit
+    y_train = [[1, 0] if i == 1 else [0, 1] for i in y_train]
+    y_test = [[1, 0] if i == 1 else [0, 1] for i in y_test]
+    model.train(X_train, y_train, epochs=epoch, batch_size=batchsize, rate = rate)
+
+    print("Testing model...")
+    predictions_train = model.predict(X_train)
+    predictions_test = model.predict(X_test)
+    
+    print("Average error on train set: ", numpy.mean(numpy.abs(y_train - predictions_train)))
+    print("Average error on test set: ", numpy.mean(numpy.abs(y_test - predictions_test)))
+    
+    predictions_results = [1 if max(x,y) == x else 0 for x, y in predictions_test]
+    actual_results = [1 if max(x,y) == x else 0 for x, y in y_test]
+    
+    correct = 0
+    
+    for i, j in zip(predictions_results, actual_results):
+        if i == j:
+            correct += 1
+    
+    print('accuracy: ' + str(correct / float(len(actual_results))))
+    return correct / float(len(actual_results))
 
 #EXPERIMENTS####################################
 
@@ -407,30 +439,33 @@ if __name__ == "__main__":
     #extract_features();
 
     #PART 3. CREATE BATCHES: SIMPLY GENERATE RANDOM BATCHES TO TEST WITH
-    #print "\n\n>>Creating Batches...\n\n"
+    print "\n\n>>Creating Batches...\n\n"
 
 
                                                            #  Train       Test
                                                            #(Good,Bad),(Good,Bad)
-    #(X_train,y_train,X_test,y_test) = create_batches(2000,500,((0.5,0.5),(0.5,0.5)))
+    (X_train,y_train,X_test,y_test) = create_batches(2000,500,((0.5,0.5),(0.5,0.5)))
 
     #PART 4. ACTUALLY RUN OUR TEST ON A NEURAL NETWORK
     #print "\n\n>>Running Through Keras NN...\n\n"
     #keras_nn(X_train,y_train,X_test,y_test)
+    
+    print "\n\n>>Running through our NN...\n\n"
+    ff_nn(X_train,y_train,X_test,y_test, batchsize = 50, layersize=20, epoch = 100, rate = 0.1)
 
     #Experiments:
-    print "Starting experiments..."
-    print "1. Batch Sizes"
+    #print "Starting experiments..."
+    #print "1. Batch Sizes"
     #exp_batchsize(1,2201,50)
 
-    print "2. Number of Hidden Layers"
+    #print "2. Number of Hidden Layers"
     #exp_numhidden(1,20,1)
 
-    print "3. Size of Hidden Layer"
+    #print "3. Size of Hidden Layer"
     #exp_sizehidden(1,2001,100)
 
-    print "4. Number of Epochs"
+    #print "4. Number of Epochs"
     #exp_epoch(1,20,1)
 
-    print "Best Run"
+    #print "Best Run"
     #best_run(reps=10,epoch=3,layersize=250,numhidden=2,batchsize=1,verbose=0)
