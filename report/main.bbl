@@ -1,0 +1,56 @@
+\begin{thebibliography}{10}
+
+\bibitem{goldberg2014word2vec}
+Y.~Goldberg and O.~Levy, ``word2vec explained: deriving mikolov et al.'s
+  negative-sampling word-embedding method,'' {\em arXiv preprint
+  arXiv:1402.3722}, 2014.
+
+\bibitem{mikolovword2vec}
+G.~Mikolov, K.~Chen, and J.~Dean, ``word2vec (2013).''
+
+\bibitem{tang2014learning}
+D.~Tang, F.~Wei, N.~Yang, M.~Zhou, T.~Liu, and B.~Qin, ``Learning
+  sentiment-specific word embedding for twitter sentiment classification.,'' in
+  {\em ACL (1)}, pp.~1555--1565, 2014.
+
+\bibitem{maas2011learning}
+A.~L. Maas, R.~E. Daly, P.~T. Pham, D.~Huang, A.~Y. Ng, and C.~Potts,
+  ``Learning word vectors for sentiment analysis,'' in {\em Proceedings of the
+  49th Annual Meeting of the Association for Computational Linguistics: Human
+  Language Technologies-Volume 1}, pp.~142--150, Association for Computational
+  Linguistics, 2011.
+
+\bibitem{tang2014coooolll}
+D.~Tang, F.~Wei, B.~Qin, T.~Liu, and M.~Zhou, ``Coooolll: A deep learning
+  system for twitter sentiment classification,'' in {\em Proceedings of the 8th
+  International Workshop on Semantic Evaluation (SemEval 2014)}, pp.~208--212,
+  2014.
+
+\bibitem{hall1998practical}
+M.~A. Hall and L.~A. Smith, ``Practical feature subset selection for machine
+  learning,'' 1998.
+
+\bibitem{Garner95weka}
+S.~R. Garner, ``Weka: The waikato environment for knowledge analysis,'' in {\em
+  In Proc. of the New Zealand Computer Science Research Students Conference},
+  pp.~57--64, 1995.
+
+\bibitem{hochreiter1998vanishing}
+S.~Hochreiter, ``The vanishing gradient problem during learning recurrent
+  neural nets and problem solutions,'' {\em International Journal of
+  Uncertainty, Fuzziness and Knowledge-Based Systems}, vol.~6, no.~02,
+  pp.~107--116, 1998.
+
+\bibitem{Kim14}
+Y.~Kim, ``Convolutional neural networks for sentence classification,'' {\em
+  CoRR}, vol.~abs/1408.5882, 2014.
+
+\bibitem{iamtrask}
+A.~W.Trask, {\em Grokking Deep Learning}.
+\newblock Manning Publications, 2016.
+
+\bibitem{neuralnet}
+M.~A. Nielsen, {\em Neural Networks and Deep Learning}.
+\newblock Determination Press, 2015.
+
+\end{thebibliography}
