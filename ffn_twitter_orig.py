@@ -5,8 +5,14 @@ import numpy as np
 import string
 import random
 
-random.seed(1)
-np.random.seed(1)
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import Flatten
+from keras.layers.embeddings import Embedding
+from keras.preprocessing import sequence
+
+#random.seed(1)
+#np.random.seed(1)
 
 #Removes symbols from the tweet
 def preprocess(tweet):
@@ -54,8 +60,8 @@ def fill_matrix(file, good_probs, bad_probs, total_tweets):
 
 #Set up neural network and training/testing files
 twitter_predictor = Feedforward_Network(140, 25, 2)
-train_file = list(open("data/good10000_1", 'r')) + list(open("data/bad10000_1", 'r'))
-test_file = list(open("data/good10000_2", 'r')) + list(open("data/bad10000_2", 'r'))
+train_file = list(open("data/good20000_1", 'r')) + list(open("data/bad20000_1", 'r'))
+test_file = list(open("data/good20000_2", 'r')) + list(open("data/bad20000_2", 'r'))
 
 
 #print(train_file, test_file)
@@ -103,13 +109,14 @@ for key in bad_count:
 
 # Create input and output matrices
 X_train, y_train = fill_matrix(train_file, good_probs, bad_probs, total_tweets_train)
+X_test, y_test = fill_matrix(test_file, good_probs, bad_probs, total_tweets_test)
 
 print(y_train)
 
 print("Done preprocessing data. Training model...")
 
 # Train model
-twitter_predictor.train(X_train, y_train, epochs = 100, batch_size = 50, rate = 0.05)
+twitter_predictor.train(X_train, y_train, epochs = 100, batch_size = 50, rate = 0.1)
 
 print("Testing model on training set...")
 
@@ -118,7 +125,6 @@ predictions_train = twitter_predictor.predict(X_train)
 
 print("Preprocessing and testing model on testing set...")
 
-X_test, y_test = fill_matrix(test_file, good_probs, bad_probs, total_tweets_test)
 predictions_test = twitter_predictor.predict(X_test)
 
 print(y_train[0:20], predictions_train[0:20])
@@ -135,3 +141,34 @@ for i, j in zip(predictions_results, actual_results):
         correct += 1
 
 print('accuracy: ' + str(correct / float(len(actual_results))))
+
+'''
+tracker = []
+for _ in range(10):
+    print "KERAS EXPERIMENT ----"
+    model = Sequential()
+    model.add(Dense(250,input_dim=140,activation="relu"))
+    model.add(Dense(2,activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    print(model.summary())
+    
+    # Fit the model
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=1, batch_size=128, verbose=1)
+    # Final evaluation of the model
+    scores = model.evaluate(X_test, y_test, verbose=0)
+    print("Accuracy (TEST): %.2f%%" % (scores[1]*100))
+    
+    scores = model.evaluate(X_train, y_train, verbose=0)
+    print("Accuracy (TRAIN): %.2f%%" % (scores[1]*100))
+    
+    output = model.predict(X_train)
+    predictions = [[1,0] if max(x) == x[0] else [0,1] for x in output]
+    
+    ans = [1 if x[0] == y[0] else 0 for x, y in zip(predictions, y_test)]
+    acc = ans.count(1) / float(len(ans))
+    print(ans.count(1) / float(len(ans)))
+    tracker.append(acc)
+    
+print(sum(tracker) / float(len(tracker)))
+print(np.std(tracker))
+'''

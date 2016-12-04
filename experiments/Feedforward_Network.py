@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import math
 
 #Feedforward neural network with 2 hidden layers
 class Feedforward_Network:
@@ -55,7 +56,7 @@ class Feedforward_Network:
                 self.syn1 += l1.T.dot(l2_delta) * rate
                 self.syn0 += l0.T.dot(l1_delta) * rate
                 
-            if epochs % 10 == 0:
+            if i == 0 or epochs % i == epochs // 10:
                 print("Error:" + str(np.mean(np.abs(l2_error))))
                 #print syn0
                 #print syn1
@@ -80,6 +81,7 @@ if __name__ == "__main__":
                 [0],
                 [0],
                 [0]])
+            
                 
     AND_predictor.train(X, y, epochs = 10000, batch_size = 4)
     
@@ -92,3 +94,20 @@ if __name__ == "__main__":
     print("1 AND 0 prediction:", p2)
     print("0 AND 1 prediction:", p3)
     print("0 AND 0 prediction:", p4)
+    
+    x_sin = np.array([[x] for x in range(100)])
+    y_sin = np.array([[(math.sin(x) + 1) / 2] for x in range(10)])
+    
+    sin_predictor = Feedforward_Network(1, 10, 1)
+    
+    sin_predictor.train(x_sin, y_sin, epochs = 5000, batch_size = 1, rate = 1)
+    
+    p1 = sin_predictor.predict(np.array([[1]]))
+    p2 = sin_predictor.predict(np.array([[6]]))
+    p3 = sin_predictor.predict(np.array([[8]]))
+    p4 = sin_predictor.predict(np.array([[3.14]]))
+    
+    print("sin(1) prediction: {}, actual {}".format(p1[0][0], (math.sin(1) + 1)/2))
+    print("sin(6) prediction: {}, actual {}".format(p2[0][0], (math.sin(6) + 1)/2))
+    print("sin(8) prediction: {}, actual {}".format(p3[0][0], (math.sin(8) + 1)/2))
+    print("sin(3.14) prediction: {}, actual {}".format(p4[0][0], (math.sin(3.14) + 1)/2))

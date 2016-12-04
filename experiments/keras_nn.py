@@ -359,23 +359,23 @@ if __name__ == "__main__":
     #best_run(reps=10,epoch=3,layersize=250,numhidden=2,batchsize=1,verbose=0)
 
     print "Run CNN"
-    run_cnn(reps=10,epoch=3,layersize=250,numhidden=1,batchsize=1,verbose=0)
+    #run_cnn(reps=10,epoch=3,layersize=250,numhidden=1,batchsize=1,verbose=0)
 
     print "Run LSTM"
-    run_lstm(reps=10,epoch=3,layersize=250,numhidden=1,batchsize=1,verbose=0)
+    #run_lstm(reps=10,epoch=3,layersize=250,numhidden=1,batchsize=1,verbose=0)
 
-######
+#####
 #PRINT WORD EMBEDDINGS TO USE ON OUR OWN NEURAL NETWORK
-#print len(X_train),len(X_train[0])
-# model = Sequential()
-# model.add(Embedding(top_words, 32, input_length=max_words))
-# model.add(Flatten())
-# model.compile("rmsprop","mse")
-# X_test_emb = model.predict(X_test)
-# X_train_emb = model.predict(X_train)
+print len(X_train),len(X_train[0])
+model = Sequential()
+model.add(Embedding(top_words, 32, input_length=max_words))
+model.add(Flatten())
+model.compile("rmsprop","mse")
+X_test_emb = model.predict(X_test)
+X_train_emb = model.predict(X_train)
 
-#with open("emb_train.ser","wb") as f:
-#    pickle.dump((X_train_emb,y_train),f)
+with open("emb_train.ser","wb") as f:
+   pickle.dump((X_train_emb,y_train),f)
 
-#with open("emb_test.ser","wb") as f:
-#    pickle.dump((X_test_emb,y_test),f)
+with open("emb_test.ser","wb") as f:
+   pickle.dump((X_test_emb,y_test),f)

@@ -257,7 +257,7 @@ def create_batches(train_size=2000,test_size=2000,split=((0.5,0.5),(0.5,0.5))):
                         train_bad += 1
 
                     X_train += [[float(i) for i in tweet]]
-                    y_train += [int(sentiment)]
+                    y_train += [[1,0]] if int(sentiment) == 1 else [[0, 1]]
 
 
                 else:
@@ -274,7 +274,7 @@ def create_batches(train_size=2000,test_size=2000,split=((0.5,0.5),(0.5,0.5))):
                         test_bad += 1
 
                     X_test += [[float(i) for i in tweet]]
-                    y_test += [int(sentiment)]
+                    y_test += [[1,0]] if int(sentiment) == 1 else [[0, 1]]
 
 
     #print (train_bad,train_good,test_bad,test_good,train_size,test_size)
@@ -291,7 +291,7 @@ def create_batches(train_size=2000,test_size=2000,split=((0.5,0.5),(0.5,0.5))):
     return (X_train,y_train,X_test,y_test)
 
 #Create, Train and Test the Nerual Network
-def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=250,epoch=1,hidden=1):
+def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=25,epoch=1,hidden=1):
 
     #print numpy.asarray(X_train)[0:5]
     # create the model
@@ -300,13 +300,25 @@ def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=250,e
     model.add(Dense(layersize, activation='relu',input_dim=len(X_train[0])))
     for h in range(1,hidden):
         model.add(Dense(layersize, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
+    model.add(Dense(2, activation='sigmoid'))
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     if (verbose == 1):
         print(model.summary())
 
     #Fit
     model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=epoch, batch_size=batchsize, verbose=verbose)
+    output = model.predict(X_test, verbose=1)
+    predictions = [[1, 0] if max(x) == x[0] else [0, 1] for x in output]
+    
+    accuracy = [1 if x[0] == y[0] else 0 for x, y in zip(predictions, y_test)]
+    print
+    acc = accuracy.count(1) / float(len(accuracy))
+    print acc
+    
+    return acc
+
+    
+    '''
     # Final evaluation of the model
     score_test = model.evaluate(X_test, y_test, verbose=verbose)
 
@@ -317,16 +329,15 @@ def keras_nn(X_train,y_train,X_test,y_test,verbose=0,batchsize=1,layersize=250,e
         print("Accuracy TRAIN: %.2f%%" % (score_train[1]*100))
 
     return score_test[1]
+    '''
     
-    #Create, Train and Test the Nerual Network
+#Create, Train and Test the Nerual Network
 def ff_nn(X_train,y_train,X_test,y_test, batchsize = 50, layersize=25, epoch = 100, rate = 0.1):
 
     
     model = Feedforward_Network(len(X_train[0]), layersize, 2)
 
     #Fit
-    y_train = [[1, 0] if i == 1 else [0, 1] for i in y_train]
-    y_test = [[1, 0] if i == 1 else [0, 1] for i in y_test]
     model.train(X_train, y_train, epochs=epoch, batch_size=batchsize, rate = rate)
 
     print("Testing model...")
@@ -417,7 +428,7 @@ def best_run(reps,epoch,layersize,numhidden,batchsize,verbose):
     total = 0
     for i in range(0,reps):
         (X_train,y_train,X_test,y_test) = create_batches(5000,2000,((0.5,0.5),(0.5,0.5)))
-        result = keras_nn(X_train,y_train,X_test,y_test,epoch=epoch,layersize=layersize,hidden=numhidden,batchsize=batchsize,verbose=verbose)
+        result = ff_nn(X_train,y_train,X_test,y_test,epoch=epoch,layersize=layersize,rate=0.1,batchsize=batchsize)
         output.write(str(result)+"\n")
         total += result
         print result," ",total/float(i+1)
@@ -444,14 +455,22 @@ if __name__ == "__main__":
 
                                                            #  Train       Test
                                                            #(Good,Bad),(Good,Bad)
-    (X_train,y_train,X_test,y_test) = create_batches(2000,500,((0.5,0.5),(0.5,0.5)))
+    (X_train,y_train,X_test,y_test) = create_batches(2000,2000,((0.5,0.5),(0.5,0.5)))
 
     #PART 4. ACTUALLY RUN OUR TEST ON A NEURAL NETWORK
     #print "\n\n>>Running Through Keras NN...\n\n"
-    #keras_nn(X_train,y_train,X_test,y_test)
+    #keras_nn(X_train,y_train,X_test,y_test, 1)
     
     print "\n\n>>Running through our NN...\n\n"
-    ff_nn(X_train,y_train,X_test,y_test, batchsize = 50, layersize=20, epoch = 100, rate = 0.1)
+    results = []
+    for _ in range(100):
+        results.append(ff_nn(X_train,y_train,X_test,y_test, batchsize = 50, layersize=250, epoch = 100, rate = 0.2))
+        print(numpy.std(results))
+    print(max(results))
+    print(min(results))
+    print(sum(results) / len(results))
+    print(numpy.std(results))
+        
 
     #Experiments:
     #print "Starting experiments..."
@@ -468,4 +487,4 @@ if __name__ == "__main__":
     #exp_epoch(1,20,1)
 
     #print "Best Run"
-    #best_run(reps=10,epoch=3,layersize=250,numhidden=2,batchsize=1,verbose=0)
+    #best_run(reps=10,epoch=100,layersize=25,numhidden=2,batchsize=1,verbose=0)
